@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"strings"
-	"bytes"
 	"bufio"
 )
 
@@ -75,9 +74,8 @@ func clientMain() {
 	}
 	fmt.Println("Connected to ", conn.RemoteAddr().String())
 	fmt.Println("I'm connecting on ", conn.LocalAddr().String())
-	var buffer bytes.Buffer
 	reader := bufio.NewReader(conn)
-	reader.ReadString(DELIM)
-	fmt.Println("Getting:", buffer.String())
+	str, _ := reader.ReadString(DELIM)
+	fmt.Println("Getting:", str)
 	conn.Close()
 }
