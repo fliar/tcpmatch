@@ -1,16 +1,19 @@
 package main
-import(
+
+import (
+	"flag"
 	"fmt"
 	"net"
-	"flag"
 	"strings"
 )
-const TITLE 		= "TCP Make Match"
-const SERVER 		= "Server Mode"
-const CLIENT		= "Client Mode"
-const PORT			= ":8013"
-const PROTOCOL		= "tcp"
-const SERVER_ADDR	= "192.168.202.78" + PORT
+
+const TITLE = "TCP Make Match"
+const SERVER = "Server Mode"
+const CLIENT = "Client Mode"
+const PRIMARY_PORT = ":8013"
+const NAT_PORT = ":8014"
+const PROTOCOL = "tcp"
+const SERVER_ADDR = "192.168.202.78" + PRIMARY_PORT
 
 func main() {
 	modeArg := flag.String("m", "c", "running mode")
@@ -20,7 +23,7 @@ func main() {
 	if mode == "s" || mode == "server" {
 		fmt.Println("running mode: ", mode)
 		serverMain()
-		return		
+		return
 	}
 	if mode == "c" || mode == "client" {
 		clientMain()
@@ -30,18 +33,35 @@ func main() {
 }
 
 func serverMain() {
-	ln, err := net.Listen(PROTOCOL, PORT)
+	ln, err := net.Listen(PROTOCOL, PRIMARY_PORT)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Listenning ", PORT)
+	fmt.Println("Listenning ", PRIMARY_PORT)
+	tln, err := net.Listen(PROTOCOL, NAT_PORT)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Listenning ", NAT_PORT)
 	for i := 0; i < 5; i++ {
-		conn , err := ln.Accept()
+		conn, err := ln.Accept()
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println("Connection ", conn.RemoteAddr().String() ,"Accepted")
+		go handlePrimaryConnection(conn)
+		conn, err = tln.Accept()
+		if err != nil {
+			panic(err)
+		}
+		
 	}
+}
+func handleNATConnection(conn net.Conn) {
+	fmt.Println("NAT Connection ", conn.RemoteAddr().String(), "Accepted")
+}
+func handlePrimaryConnection(conn net.Conn) {
+	fmt.Println("Primary Connection ", conn.RemoteAddr().String(), "Accepted")
+	conn.Write(([]byte)(NAT_PORT))
 }
 func clientMain() {
 	conn, err := net.Dial(PROTOCOL, SERVER_ADDR)
@@ -49,5 +69,9 @@ func clientMain() {
 		panic(err.Error())
 	}
 	fmt.Println("Connected to ", conn.RemoteAddr().String())
+	fmt.Println("I'm connecting on ", conn.LocalAddr().String())
+	var buffer []byte
+	conn.Read(buffer)
+	fmt.Println("Getting:", (string)(buffer))
 	conn.Close()
 }
