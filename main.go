@@ -55,7 +55,7 @@ func serverMain() {
 		if err != nil {
 			panic(err)
 		}
-		go handlePrimaryConnection(conn)
+		go handleNATConnection(conn)
 	}
 }
 func handleNATConnection(conn net.Conn) {
