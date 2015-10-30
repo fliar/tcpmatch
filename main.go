@@ -55,7 +55,7 @@ func serverMain() {
 		if err != nil {
 			panic(err)
 		}
-		
+		go handlePrimaryConnection(conn)
 	}
 }
 func handleNATConnection(conn net.Conn) {
@@ -77,6 +77,7 @@ func clientMain() {
 	fmt.Println("I'm connecting on ", conn.LocalAddr().String())
 	reader := bufio.NewReader(conn)
 	portStr , _ := reader.ReadString(DELIM)
+	portStr = strings.TrimRight(portStr,string(DELIM))
 	fmt.Println("Getting:", portStr)
 	//connect to NAT port
 	connNAT, err := net.Dial(PROTOCOL, SERVER_IP + portStr)
