@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"bytes"
+	"io"
 )
 
 const TITLE = "TCP Make Match"
@@ -62,7 +64,6 @@ func handleNATConnection(conn net.Conn) {
 func handlePrimaryConnection(conn net.Conn) {
 	fmt.Println("Primary Connection ", conn.RemoteAddr().String(), "Accepted")
 	conn.Write(([]byte)(NAT_PORT))
-	conn.Close()
 }
 func clientMain() {
 	conn, err := net.Dial(PROTOCOL, SERVER_ADDR)
@@ -71,8 +72,8 @@ func clientMain() {
 	}
 	fmt.Println("Connected to ", conn.RemoteAddr().String())
 	fmt.Println("I'm connecting on ", conn.LocalAddr().String())
-	var buffer []byte
-	conn.Read(buffer)
-	fmt.Println("Getting:", (string)(buffer))
+	var buffer bytes.Buffer
+	io.Copy(&buffer, conn)
+	fmt.Println("Getting:", buffer.String())
 	conn.Close()
 }
