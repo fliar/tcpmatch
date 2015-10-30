@@ -84,6 +84,20 @@ func clientMain() {
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println("Connected to ", connNAT.RemoteAddr().String())
-	fmt.Println("I'm connecting on ", connNAT.LocalAddr().String())
+	fmt.Println("NAT Connected to ", connNAT.RemoteAddr().String())
+	fmt.Println("NAT I'm connecting on ", connNAT.LocalAddr().String())
+	fmt.Println("NAT Network ", connNAT.LocalAddr().Network())
+	
+	natAddr := connNAT.LocalAddr().String()
+	connNAT.Close()
+	ln, err := net.Listen(PROTOCOL, natAddr)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println("NAT listening on ", natAddr)
+	connNAT, err = ln.Accept()
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println("NAT", connNAT.LocalAddr().String(), "connected")
 }
