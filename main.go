@@ -7,7 +7,6 @@ import (
 	"strings"
 	"bytes"
 	"bufio"
-	"io"
 )
 
 const TITLE = "TCP Make Match"
@@ -17,7 +16,7 @@ const PRIMARY_PORT = ":8013"
 const NAT_PORT = ":8014"
 const PROTOCOL = "tcp"
 const SERVER_ADDR = "192.168.202.78" + PRIMARY_PORT
-
+const DELIM = '\x03'
 func main() {
 	modeArg := flag.String("m", "c", "running mode")
 	flag.Parse()
@@ -66,6 +65,7 @@ func handlePrimaryConnection(conn net.Conn) {
 	fmt.Println("Primary Connection ", conn.RemoteAddr().String(), "Accepted")
 	writer := bufio.NewWriter(conn)
 	writer.WriteString(NAT_PORT)
+	writer.WriteByte(DELIM)
 	writer.Flush()
 }
 func clientMain() {
@@ -76,7 +76,8 @@ func clientMain() {
 	fmt.Println("Connected to ", conn.RemoteAddr().String())
 	fmt.Println("I'm connecting on ", conn.LocalAddr().String())
 	var buffer bytes.Buffer
-	io.Copy(&buffer, conn)
+	reader := bufio.NewReader(conn)
+	reader.ReadString(DELIM)
 	fmt.Println("Getting:", buffer.String())
 	conn.Close()
 }
