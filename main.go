@@ -6,6 +6,7 @@ import (
 	"net"
 	"strings"
 	"bytes"
+	"bufio"
 	"io"
 )
 
@@ -63,8 +64,9 @@ func handleNATConnection(conn net.Conn) {
 }
 func handlePrimaryConnection(conn net.Conn) {
 	fmt.Println("Primary Connection ", conn.RemoteAddr().String(), "Accepted")
-	conn.Write(([]byte)(NAT_PORT))
-	conn.Close()
+	writer := bufio.NewWriter(conn)
+	writer.WriteString(NAT_PORT)
+	writer.Flush()
 }
 func clientMain() {
 	conn, err := net.Dial(PROTOCOL, SERVER_ADDR)
