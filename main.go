@@ -62,6 +62,7 @@ func handleNATConnection(conn net.Conn) {
 func handlePrimaryConnection(conn net.Conn) {
 	fmt.Println("Primary Connection ", conn.RemoteAddr().String(), "Accepted")
 	conn.Write(([]byte)(NAT_PORT))
+	conn.Close()
 }
 func clientMain() {
 	conn, err := net.Dial(PROTOCOL, SERVER_ADDR)
