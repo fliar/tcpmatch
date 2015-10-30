@@ -14,7 +14,8 @@ const CLIENT = "Client Mode"
 const PRIMARY_PORT = ":8013"
 const NAT_PORT = ":8014"
 const PROTOCOL = "tcp"
-const SERVER_ADDR = "192.168.202.78" + PRIMARY_PORT
+const SERVER_IP = "192.168.202.78"
+const SERVER_ADDR = SERVER_IP + PRIMARY_PORT
 const DELIM = '\x03'
 func main() {
 	modeArg := flag.String("m", "c", "running mode")
@@ -75,7 +76,13 @@ func clientMain() {
 	fmt.Println("Connected to ", conn.RemoteAddr().String())
 	fmt.Println("I'm connecting on ", conn.LocalAddr().String())
 	reader := bufio.NewReader(conn)
-	str, _ := reader.ReadString(DELIM)
-	fmt.Println("Getting:", str)
-	conn.Close()
+	portStr , _ := reader.ReadString(DELIM)
+	fmt.Println("Getting:", portStr)
+	//connect to NAT port
+	connNAT, err := net.Dial(PROTOCOL, SERVER_IP + portStr)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println("Connected to ", connNAT.RemoteAddr().String())
+	fmt.Println("I'm connecting on ", connNAT.LocalAddr().String())
 }
