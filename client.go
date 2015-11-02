@@ -5,42 +5,55 @@ import(
 	"net"
 )
 
+func log(logs chan string) {
+	for true {
+		log := <- logs
+		fmt.Println(log)
+	}
+}
+
 func clientMatch() {
 	fmt.Println("Client Match")
 	readyChan := make(chan bool)
 	addrChan := make(chan string)
 	lnChan := make(chan string)
-	go dialRemote(readyChan, addrChan)
-	go connector(readyChan, addrChan, lnChan)
+	logs := make(chan string)
+	go dialRemote(readyChan, addrChan, logs)
+	go connector(readyChan, addrChan, lnChan, logs)
 }
 
-func dialRemote(readyChan chan bool, addrChan chan string) {
+func dialRemote(readyChan chan bool, addrChan chan string, logs chan string) {
+	logs <- "dial remote"
 	conn, err := net.Dial(PROTOCOL, SERVER_ADDR)
 	if err != nil {
 		panic(err)
 	}
 	localAddr := conn.LocalAddr().String()
 	conn.Close()
-	fmt.Println("connected to ", SERVER_ADDR)
-	fmt.Println("local: ", localAddr)
+	logs<- "connected to " + SERVER_ADDR
+	logs<- "local: " + localAddr
 	addrChan <- localAddr
 	readyChan <- true
 }
 
-func connector(readyChan chan bool, addrChan,lnChan chan string) {
+func connector(
+	readyChan chan bool,
+	addrChan,lnChan chan string,
+	logs chan string) {
 	ready := <- readyChan
 	if ready {
 		fmt.Println("ready to listen port")
+		logs <- "ready to listen port"
 		addr :=  <- addrChan
-		fmt.Println("preparing to connect ", addr)
+		logs <- "preparing to connect " + addr
 		lnChan <- addr 
 	}
 	return
 }
 
-func listenLocal(lnChan chan string) {
+func listenLocal(lnChan chan string, logs chan string) {
 	addr := <- lnChan
-	fmt.Println("start listening", addr)
+	logs <- "start listening" + addr
 	_ , err := net.Listen(PROTOCOL, addr)
 	if err!= nil {
 		panic(err)
