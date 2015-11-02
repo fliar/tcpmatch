@@ -24,11 +24,11 @@ func main() {
 	fmt.Println(TITLE)
 	if mode == "s" || mode == "server" {
 		fmt.Println("running mode: ", mode)
-		serverMain()
+		listen()
 		return
 	}
 	if mode == "c" || mode == "client" {
-		clientMain()
+		clientMatch()
 		return
 	}
 	fmt.Println("unknown mode")
