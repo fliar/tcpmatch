@@ -3,6 +3,7 @@ package main
 import(
 	"fmt"
 	"net"
+	"time"
 )
 
 func log(logs chan string) {
@@ -20,6 +21,8 @@ func clientMatch() {
 	logs := make(chan string)
 	go dialRemote(readyChan, addrChan, logs)
 	go connector(readyChan, addrChan, lnChan, logs)
+	go listenLocal(lnChan, logs)
+	log(logs)
 }
 
 func dialRemote(readyChan chan bool, addrChan chan string, logs chan string) {
@@ -30,32 +33,40 @@ func dialRemote(readyChan chan bool, addrChan chan string, logs chan string) {
 	}
 	localAddr := conn.LocalAddr().String()
 	conn.Close()
+	time.Sleep(time.Millisecond)
 	logs<- "connected to " + SERVER_ADDR
 	logs<- "local: " + localAddr
-	addrChan <- localAddr
 	readyChan <- true
+	addrChan <- localAddr
 }
 
 func connector(
 	readyChan chan bool,
 	addrChan,lnChan chan string,
 	logs chan string) {
+	logs <- "connector"
 	ready := <- readyChan
 	if ready {
-		fmt.Println("ready to listen port")
 		logs <- "ready to listen port"
 		addr :=  <- addrChan
 		logs <- "preparing to connect " + addr
 		lnChan <- addr 
 	}
+	logs <- "connector done"
 	return
 }
 
 func listenLocal(lnChan chan string, logs chan string) {
 	addr := <- lnChan
 	logs <- "start listening" + addr
-	_ , err := net.Listen(PROTOCOL, addr)
-	if err!= nil {
-		panic(err)
+	loop := true
+	for loop {
+		_ , err := net.Listen(PROTOCOL, addr)
+		if err== nil {
+			break
+		}
+		logs <- err.Error()
+		logs <- "reconnect in 2 second"
+		time.Sleep(time.Second * 2)
 	}
 }

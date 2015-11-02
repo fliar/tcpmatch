@@ -2,6 +2,7 @@ package main
 import(
 	"fmt"
 	"net"
+	"time"
 )
 
 func listen() {
@@ -18,5 +19,7 @@ func listen() {
 		name := fmt.Sprint("Client", i+1)
 		fmt.Println(name, "connected")
 		conns[name] = conn.RemoteAddr().String()
+		conn.Close()
+		time.Sleep(time.Millisecond)
 	}
 }
