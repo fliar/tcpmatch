@@ -4,6 +4,9 @@ import(
 	"fmt"
 	"net"
 	"time"
+	"os/exec"
+	"bytes"
+	"strings"
 )
 
 func log(logs chan string) {
@@ -14,6 +17,36 @@ func log(logs chan string) {
 }
 
 func clientMatch() {
+	fmt.Println("Client Match")
+	path, err := exec.LookPath("SimpleConnect")
+	if err != nil {
+		fmt.Println("SimpleConnect is not found")
+	}
+	arg := "-r " + SERVER_ADDR
+	fmt.Println("args:", arg)
+	cmd := exec.Command(path)
+	var out bytes.Buffer
+	cmd.Stdout = & out
+	err = cmd.Run()
+	if err != nil {
+		panic(err)
+	}
+	localAddr := out.String()
+	localPort := ":" + strings.Split(localAddr, ":")[1]
+	localPort = strings.TrimSpace(localPort)
+	fmt.Println("local port", localPort)
+	time.Sleep(time.Microsecond)
+	for {
+		_ , err = net.Listen(PROTOCOL, localAddr)
+		if err == nil {
+			break
+		}
+		fmt.Println(err.Error())
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func clientMatch_old() {
 	fmt.Println("Client Match")
 	readyChan := make(chan bool)
 	addrChan := make(chan string)
